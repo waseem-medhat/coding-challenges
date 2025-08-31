@@ -9,6 +9,7 @@ struct Config {
 enum Count {
     Bytes,
     Chars,
+    Words,
     Lines,
     All,
 }
@@ -24,8 +25,9 @@ impl Config {
             3 => {
                 let count = match args[1].as_str() {
                     "-c" => Count::Bytes,
-                    "-l" => Count::Lines,
                     "-m" => Count::Chars,
+                    "-w" => Count::Words,
+                    "-l" => Count::Lines,
                     _ => panic!("invalid arg"),
                 };
                 Self {
@@ -41,6 +43,8 @@ impl Config {
 fn count(content: String, count: Count) -> usize {
     match count {
         Count::Bytes => content.len(),
+        Count::Lines => content.chars().filter(|&c| c == '\n').count(),
+        Count::Words => content.split_ascii_whitespace().count(),
         _ => panic!("TODO :D"),
     }
 }
