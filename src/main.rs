@@ -3,10 +3,10 @@ use std::fs;
 
 struct Config {
     filename: String,
-    count: Count,
+    count_opt: CountOpt,
 }
 
-enum Count {
+enum CountOpt {
     Bytes,
     Chars,
     Words,
@@ -20,19 +20,19 @@ impl Config {
         match args.len() {
             2 => Result::Ok(Self {
                 filename: args[1].clone(),
-                count: Count::All,
+                count_opt: CountOpt::All,
             }),
             3 => {
                 let count = match args[1].as_str() {
-                    "-c" => Count::Bytes,
-                    "-m" => Count::Chars,
-                    "-w" => Count::Words,
-                    "-l" => Count::Lines,
+                    "-c" => CountOpt::Bytes,
+                    "-m" => CountOpt::Chars,
+                    "-w" => CountOpt::Words,
+                    "-l" => CountOpt::Lines,
                     _ => return Err(String::from("invalid arg")),
                 };
                 Result::Ok(Self {
                     filename: args[2].clone(),
-                    count,
+                    count_opt: count,
                 })
             }
             _ => Err(String::from("invalid number of args")),
@@ -40,14 +40,38 @@ impl Config {
     }
 }
 
-fn count(content: String, count: Count) -> usize {
-    match count {
-        Count::Bytes => content.len(),
-        Count::Lines => content.chars().filter(|&c| c == '\n').count(),
-        Count::Words => content.split_ascii_whitespace().count(),
-        Count::Chars => content.chars().count(),
-        _ => panic!("TODO :D"),
-    }
+fn cmd_count(content: &String, config: &Config) -> String {
+    let count_str = match config.count_opt {
+        CountOpt::Bytes => count_bytes(content).to_string(),
+        CountOpt::Lines => count_lines(content).to_string(),
+        CountOpt::Words => count_words(content).to_string(),
+        CountOpt::Chars => count_chars(content).to_string(),
+        CountOpt::All => {
+            let bytes = count_bytes(content).to_string();
+            let words = count_words(content).to_string();
+            let lines = count_lines(content).to_string();
+
+            format!(" {:>7} {:>7} {:>7}", lines, words, bytes)
+        }
+    };
+
+    format!("{count_str} {}", config.filename)
+}
+
+fn count_bytes(content: &String) -> usize {
+    content.len()
+}
+
+fn count_lines(content: &String) -> usize {
+    content.chars().filter(|&c| c == '\n').count()
+}
+
+fn count_words(content: &String) -> usize {
+    content.split_ascii_whitespace().count()
+}
+
+fn count_chars(content: &String) -> usize {
+    content.chars().count()
 }
 
 fn main() {
@@ -56,11 +80,11 @@ fn main() {
         Ok(config) => config,
     };
 
-    let file_content = match fs::read_to_string(config.filename) {
+    let file_content = match fs::read_to_string(&config.filename) {
         Err(_) => panic!("couldn't read file!"),
         Ok(str) => str,
     };
 
-    let file_count = count(file_content, config.count);
+    let file_count = cmd_count(&file_content, &config);
     println!("{file_count}");
 }
