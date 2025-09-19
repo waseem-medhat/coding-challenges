@@ -1,9 +1,10 @@
 use std::env::{self, Args};
+use std::fs;
 use std::iter::Skip;
 
 pub struct Config {
-    // index starts at 1
-    field_num: u32,
+    field_num: u32, // index starts at 1
+    file_name: String,
 }
 
 impl Config {
@@ -11,22 +12,46 @@ impl Config {
         self.field_num
     }
 
+    pub fn file_name(&self) -> String {
+        self.file_name.clone()
+    }
+
     pub fn from_args() -> Config {
         let mut args = env::args().skip(1);
-        parse(&mut args, Config { field_num: 0 })
+        parse(
+            &mut args,
+            Config {
+                field_num: 0,
+                file_name: String::new(),
+            },
+        )
     }
 }
 
 fn parse(args: &mut Skip<Args>, acc: Config) -> Config {
     match args.next() {
         None => acc,
-        Some(arg) => {
-            if arg.starts_with("-f") {
-                let field_num: u32 = arg[2..].parse().expect("invalid num");
-                Config { field_num }
-            } else {
-                panic!("invalid arg!")
-            }
+
+        Some(arg) if arg.starts_with("-f") => {
+            let field_num: u32 = arg[2..].parse().expect("invalid num");
+            parse(
+                args,
+                Config {
+                    field_num,
+                    file_name: acc.file_name(),
+                },
+            )
         }
+
+        Some(arg) => match fs::metadata(&arg) {
+            Ok(_) => parse(
+                args,
+                Config {
+                    field_num: acc.field_num(),
+                    file_name: arg,
+                },
+            ),
+            Err(_) => panic!("file {arg} doesn't exist"),
+        },
     }
 }
