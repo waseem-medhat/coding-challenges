@@ -22,7 +22,7 @@ fn parse(args: &mut Skip<Args>, acc: Config) -> Config {
         None => acc,
         Some(arg) => {
             if arg.starts_with("-f") {
-                let field_num = arg.chars().nth(2).unwrap().to_digit(10).unwrap();
+                let field_num: u32 = arg[2..].parse().expect("invalid num");
                 Config { field_num }
             } else {
                 panic!("invalid arg!")
