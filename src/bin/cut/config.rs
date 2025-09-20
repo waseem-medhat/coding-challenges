@@ -3,25 +3,18 @@ use std::fs;
 use std::iter::Skip;
 
 pub struct Config {
-    field_num: u32, // index starts at 1
+    field_num: i32, // index starts at 1
     file_name: String,
     delimiter: String,
 }
 
 impl Config {
     pub fn from_args() -> Config {
-        let mut args = env::args().skip(1);
-        parse(
-            &mut args,
-            Config {
-                field_num: 0,
-                file_name: String::new(),
-                delimiter: String::from("\t"),
-            },
-        )
+        let args = env::args().skip(1);
+        parse(args)
     }
 
-    pub fn field_num(&self) -> u32 {
+    pub fn field_num(&self) -> i32 {
         self.field_num
     }
 
@@ -34,44 +27,34 @@ impl Config {
     }
 }
 
-fn parse(args: &mut Skip<Args>, acc: Config) -> Config {
-    match args.next() {
-        None => acc,
+fn parse(mut args: Skip<Args>) -> Config {
+    let mut field_num: Option<i32> = None;
+    let mut file_name = None;
+    let mut delimiter = None;
 
-        Some(arg) if arg.starts_with("-f") => {
-            let field_num: u32 = arg[2..].parse().expect("invalid num");
-            parse(
-                args,
-                Config {
-                    field_num,
-                    file_name: acc.file_name(),
-                    delimiter: acc.delimiter(),
-                },
-            )
+    loop {
+        match args.next() {
+            None => break,
+            Some(arg) if arg.starts_with("-f") => {
+                let field_num_parsed = arg[2..].parse().unwrap();
+                field_num = Some(field_num_parsed);
+            }
+            Some(arg) if arg.starts_with("-d") => {
+                let delimiter_parsed = arg[2..].to_string();
+                delimiter = Some(delimiter_parsed);
+            }
+            Some(arg) => match fs::metadata(&arg) {
+                Ok(_) => {
+                    file_name = Some(arg);
+                }
+                Err(_) => panic!("file {arg} doesn't exist"),
+            },
         }
+    }
 
-        Some(arg) if arg.starts_with("-d") => {
-            let delimiter = arg[2..].to_string();
-            parse(
-                args,
-                Config {
-                    field_num: acc.field_num(),
-                    file_name: acc.file_name(),
-                    delimiter,
-                },
-            )
-        }
-
-        Some(arg) => match fs::metadata(&arg) {
-            Ok(_) => parse(
-                args,
-                Config {
-                    field_num: acc.field_num(),
-                    file_name: arg,
-                    delimiter: acc.delimiter(),
-                },
-            ),
-            Err(_) => panic!("file {arg} doesn't exist"),
-        },
+    Config {
+        field_num: field_num.unwrap_or(0),
+        file_name: file_name.expect("file name not provided"),
+        delimiter: delimiter.unwrap_or(String::from("\t")),
     }
 }

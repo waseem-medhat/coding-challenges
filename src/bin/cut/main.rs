@@ -9,7 +9,7 @@ fn main() {
     print_field(file, config.field_num(), config.delimiter());
 }
 
-fn print_field(file: String, field_num: u32, delimiter: String) {
+fn print_field(file: String, field_num: i32, delimiter: String) {
     file.lines().for_each(|line| {
         let field = line
             .split(&delimiter)
