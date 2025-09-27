@@ -1,30 +1,42 @@
 use std::collections::HashMap;
-use std::env::{args, var};
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
 fn main() {
-    let cmds: Vec<String> = args().skip(1).collect();
-    let mut cmd_results: HashMap<String, PathBuf> = HashMap::new();
+    let cmds: Vec<String> = env::args().skip(1).collect();
 
-    var("PATH")
-        .expect("no PATH variable")
-        .split(":")
-        .for_each(|path| {
-            if let Some(cmd) = find_cmd(String::from(path), &cmds) {
-                cmd_results
-                    .entry(cmd.clone())
-                    .or_insert(PathBuf::from(path).join(cmd));
-            }
-        });
+    let path_var = env::var("PATH").expect("no PATH variable");
+    let cmd_results = walk_paths(path_var, &cmds);
 
     cmds.iter().for_each(|cmd| match cmd_results.get(cmd) {
         None => println!("{cmd} not found"),
-        Some(path) => println!("{}", PathBuf::from(path).join(cmd).to_string_lossy()),
+        Some(path) => println!("{}", path.to_string_lossy()),
     });
 }
 
-fn find_cmd(path: String, cmds: &Vec<String>) -> Option<String> {
+fn walk_paths(path_var: String, cmds: &Vec<String>) -> HashMap<String, PathBuf> {
+    let mut cmd_results: HashMap<String, PathBuf> = HashMap::new();
+    let mut paths = path_var.split(":");
+
+    loop {
+        let path_opt = paths.next();
+        if path_opt.is_none() || cmd_results.len() == cmds.len() {
+            break;
+        }
+
+        let path = path_opt.unwrap().to_string();
+        if let Some(cmd) = find_in_path(&path, &cmds) {
+            cmd_results
+                .entry(cmd.clone())
+                .or_insert(PathBuf::from(path).join(cmd));
+        }
+    }
+
+    return cmd_results;
+}
+
+fn find_in_path(path: &String, cmds: &Vec<String>) -> Option<String> {
     let dir = fs::read_dir(path);
 
     if dir.is_err() {
@@ -37,8 +49,7 @@ fn find_cmd(path: String, cmds: &Vec<String>) -> Option<String> {
                 .as_ref()
                 .unwrap()
                 .path()
-                .file_name()
-                .unwrap()
+                .file_name()?
                 .to_string_lossy()
                 .to_string();
 
