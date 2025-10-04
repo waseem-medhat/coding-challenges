@@ -33,20 +33,23 @@ fn main() {
 }
 
 fn read_from_args() -> Result<Config, String> {
-    let args: Vec<String> = env::args().skip(1).collect();
-    let (file_names, print_nums) = if args[0] == String::from("-n") {
-        (&args[1..], true)
-    } else {
-        (&args[..], false)
-    };
+    let mut args = env::args().skip(1);
+    let mut print_nums = false;
+    let mut content = String::new();
 
-    if let [] = file_names {
-        return Err(String::from("no file name(s) provided"));
+    // 1st arg should either be -n or a file name
+    match args.next() {
+        None => return Err(String::from("no file name(s) provided")),
+        Some(arg) if arg == String::from("-n") => print_nums = true,
+        Some(file_name) => {
+            let file_content = fs::read_to_string(file_name).expect("couldn't read file");
+            content = file_content;
+        }
     }
 
-    let content = file_names.iter().fold(String::new(), |acc, file_name| {
+    args.for_each(|file_name| {
         let file_content = fs::read_to_string(file_name).expect("couldn't read file");
-        acc + &file_content
+        content += &file_content
     });
 
     Ok(Config {
@@ -63,8 +66,7 @@ fn read_from_stdin() -> Result<Config, String> {
         return Err(String::from("couldn't read stdin"));
     }
 
-    let args: Vec<String> = env::args().skip(1).collect();
-    let print_nums = args.len() > 0 && args[0] == String::from("-n");
+    let print_nums = env::args().skip(1).next().unwrap_or(String::new()) == "-n";
 
     Ok(Config {
         content,
