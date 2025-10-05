@@ -20,7 +20,7 @@ fn main() -> Result<(), io::Error> {
             .enumerate()
             .for_each(|(i, l)| println!(" {:>3} {l}", i + 1))
     } else {
-        config.content.lines().for_each(|l| println!("{l}"))
+        println!("{}", config.content)
     }
 
     Ok(())
@@ -39,16 +39,14 @@ fn read_from_args() -> Result<Config, io::Error> {
                 "no arguments provided",
             ));
         }
-        Some(arg) if arg == String::from("-n") => print_nums = true,
+        Some(arg) if arg == "-n" => print_nums = true,
         Some(file_name) => {
-            let file_content = fs::read_to_string(file_name)?;
-            content = file_content;
+            content += &fs::read_to_string(file_name)?;
         }
     }
 
     while let Some(file_name) = args.next() {
-        let file_content = fs::read_to_string(file_name)?;
-        content += &file_content
+        content += &fs::read_to_string(file_name)?
     }
 
     Ok(Config {
