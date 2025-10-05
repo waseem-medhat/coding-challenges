@@ -1,24 +1,16 @@
 use std::io::{self, IsTerminal, Read};
-use std::{env, fs, process};
+use std::{env, fs};
 
 struct Config {
     content: String,
     print_nums: bool,
 }
 
-fn main() {
-    let content = if io::stdin().is_terminal() {
-        read_from_args()
+fn main() -> Result<(), io::Error> {
+    let config = if io::stdin().is_terminal() {
+        read_from_args()?
     } else {
-        read_from_stdin()
-    };
-
-    let config = match content {
-        Err(msg) => {
-            println!("{msg}");
-            process::exit(1);
-        }
-        Ok(config) => config,
+        read_from_stdin()?
     };
 
     if config.print_nums {
@@ -30,27 +22,34 @@ fn main() {
     } else {
         config.content.lines().for_each(|l| println!("{l}"))
     }
+
+    Ok(())
 }
 
-fn read_from_args() -> Result<Config, String> {
+fn read_from_args() -> Result<Config, io::Error> {
     let mut args = env::args().skip(1);
     let mut print_nums = false;
     let mut content = String::new();
 
     // 1st arg should either be -n or a file name
     match args.next() {
-        None => return Err(String::from("no file name(s) provided")),
+        None => {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "no arguments provided",
+            ));
+        }
         Some(arg) if arg == String::from("-n") => print_nums = true,
         Some(file_name) => {
-            let file_content = fs::read_to_string(file_name).expect("couldn't read file");
+            let file_content = fs::read_to_string(file_name)?;
             content = file_content;
         }
     }
 
-    args.for_each(|file_name| {
-        let file_content = fs::read_to_string(file_name).expect("couldn't read file");
+    while let Some(file_name) = args.next() {
+        let file_content = fs::read_to_string(file_name)?;
         content += &file_content
-    });
+    }
 
     Ok(Config {
         content,
@@ -58,13 +57,9 @@ fn read_from_args() -> Result<Config, String> {
     })
 }
 
-fn read_from_stdin() -> Result<Config, String> {
+fn read_from_stdin() -> Result<Config, io::Error> {
     let mut content = String::new();
-    let result = io::stdin().read_to_string(&mut content);
-
-    if result.is_err() {
-        return Err(String::from("couldn't read stdin"));
-    }
+    io::stdin().read_to_string(&mut content)?;
 
     let print_nums = env::args().skip(1).next().unwrap_or(String::new()) == "-n";
 
