@@ -2,7 +2,7 @@ use std::{env, io, str::FromStr};
 
 pub struct Config {
     host: String,
-    port: u16,
+    port: Option<u16>,
 }
 
 impl Config {
@@ -20,9 +20,13 @@ impl Config {
             }
         }
 
+        if host.is_none() {
+            return Err(err_invalid_input("host must be specified"));
+        }
+
         Ok(Config {
-            host: host.unwrap(),
-            port: port.unwrap(),
+            host: host.expect(""),
+            port: port,
         })
     }
 
@@ -30,7 +34,7 @@ impl Config {
         self.host.clone()
     }
 
-    pub fn port(&self) -> u16 {
+    pub fn port(&self) -> Option<u16> {
         self.port.clone()
     }
 }
