@@ -7,8 +7,6 @@ use std::env;
 use std::fs;
 use std::process;
 
-// use crate::parser::valid_json;
-
 fn main() {
     let filename = match env::args().nth(1) {
         None => {
