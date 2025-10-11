@@ -50,7 +50,7 @@ fn parse(mut args: Skip<Args>) -> Config {
 
     Config {
         input: input.expect("no input provided"),
-        field_nums: field_nums.unwrap_or(vec![]),
+        field_nums: field_nums.unwrap_or_default(),
         delimiter: delimiter.unwrap_or(String::from("\t")),
     }
 }
@@ -76,11 +76,8 @@ fn read_file_or_stdin(arg: &String) -> String {
         return input;
     }
 
-    match fs::metadata(&arg) {
-        Ok(_) => {
-            input = fs::read_to_string(arg).unwrap();
-            return input;
-        }
+    match fs::metadata(arg) {
+        Ok(_) => fs::read_to_string(arg).unwrap(),
         Err(_) => panic!("file doesn't exist {arg}"),
     }
 }
