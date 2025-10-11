@@ -45,7 +45,7 @@ fn read_from_args() -> Result<Config, io::Error> {
         }
     }
 
-    while let Some(file_name) = args.next() {
+    for file_name in args {
         content += &fs::read_to_string(file_name)?
     }
 
@@ -59,7 +59,7 @@ fn read_from_stdin() -> Result<Config, io::Error> {
     let mut content = String::new();
     io::stdin().read_to_string(&mut content)?;
 
-    let print_nums = env::args().skip(1).next().unwrap_or(String::new()) == "-n";
+    let print_nums = env::args().nth(1).unwrap_or_default() == "-n";
 
     Ok(Config {
         content,
