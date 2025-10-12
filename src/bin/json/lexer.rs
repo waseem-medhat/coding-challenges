@@ -21,7 +21,7 @@ impl Token {
     }
 }
 
-pub fn lex(input: &String) -> Result<Vec<Token>, String> {
+pub fn lex(input: &str) -> Result<Vec<Token>, String> {
     let mut tokens: Vec<Token> = Vec::with_capacity(input.len());
 
     let mut in_string = false;
@@ -50,10 +50,7 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             '}' => {
                 if in_number {
                     in_number = false;
-                    let parsed: f64 = current_number
-                        .parse()
-                        .expect(format!("couldn't parse {current_number}").as_str());
-                    tokens.push(Token::Num(parsed));
+                    tokens.push(parse_number_token(&current_number)?);
                     current_number.clear();
                 }
                 tokens.push(Token::ObjClose)
@@ -63,10 +60,7 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             ']' => {
                 if in_number {
                     in_number = false;
-                    let parsed: f64 = current_number
-                        .parse()
-                        .expect(format!("couldn't parse {current_number}").as_str());
-                    tokens.push(Token::Num(parsed));
+                    tokens.push(parse_number_token(&current_number)?);
                     current_number.clear();
                 }
                 tokens.push(Token::ArrClose)
@@ -77,10 +71,7 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             ',' => {
                 if in_number {
                     in_number = false;
-                    let parsed: f64 = current_number
-                        .parse()
-                        .expect(format!("couldn't parse {current_number}").as_str());
-                    tokens.push(Token::Num(parsed));
+                    tokens.push(parse_number_token(&current_number)?);
                     current_number.clear();
                 }
                 tokens.push(Token::Comma);
@@ -117,10 +108,7 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             char if char.is_whitespace() => {
                 if in_number {
                     in_number = false;
-                    let parsed: f64 = current_number
-                        .parse()
-                        .expect(format!("couldn't parse {current_number}").as_str());
-                    tokens.push(Token::Num(parsed));
+                    tokens.push(parse_number_token(&current_number)?);
                     current_number.clear();
                 }
                 continue;
@@ -131,4 +119,11 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
     }
 
     Ok(tokens)
+}
+
+fn parse_number_token(num_string: &String) -> Result<Token, String> {
+    num_string
+        .parse::<f64>()
+        .map(Token::Num)
+        .map_err(|_| format!("couldn't parse {num_string}"))
 }

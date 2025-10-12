@@ -9,7 +9,7 @@ pub fn is_valid_json(tokens: &Vec<Token>) -> bool {
 }
 
 fn validate(token_slice: &[Token]) -> bool {
-    if token_slice.len() == 0 {
+    if token_slice.is_empty() {
         return true;
     }
 

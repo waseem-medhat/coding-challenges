@@ -8,13 +8,10 @@ use std::fs;
 use std::process;
 
 fn main() {
-    let filename = match env::args().nth(1) {
-        None => {
-            eprintln!("filename not provided");
-            process::exit(1);
-        }
-        Some(filename) => filename,
-    };
+    let filename = env::args().nth(1).unwrap_or_else(|| {
+        eprintln!("filename not provided");
+        process::exit(1);
+    });
 
     let input = fs::read_to_string(filename).expect("couldn't read file");
     let tokens = lexer::lex(&input).expect("tokenization error");

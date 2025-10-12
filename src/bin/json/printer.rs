@@ -1,6 +1,6 @@
 use crate::lexer::Token;
 
-pub fn print(tokens: &Vec<Token>) {
+pub fn print(tokens: &[Token]) {
     fn to_text(token: &Token) -> String {
         match token {
             Token::ObjOpen => "{".to_string(),
