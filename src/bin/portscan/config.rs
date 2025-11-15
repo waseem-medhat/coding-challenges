@@ -1,4 +1,5 @@
-use std::{env, io, str::FromStr};
+use anyhow::anyhow;
+use std::{env, str::FromStr};
 
 pub struct Config {
     host: String,
@@ -6,27 +7,27 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_args() -> Result<Config, io::Error> {
-        let mut args = env::args().skip(1);
+    pub fn from_args() -> anyhow::Result<Config> {
+        let args = env::args().skip(1);
         let mut host: Option<String> = None;
         let mut port: Option<u16> = None;
 
-        loop {
-            match args.next() {
-                None => break,
-                Some(arg) if arg.starts_with("-host=") => host = Some(get_arg_value(arg)?),
-                Some(arg) if arg.starts_with("-port=") => port = Some(get_arg_value(arg)?),
-                _ => return Err(err_invalid_input("no arguments provided")),
+        for arg in args {
+            if arg.starts_with("-host=") {
+                host = Some(get_arg_value(&arg)?)
+            }
+            if arg.starts_with("-port=") {
+                port = Some(get_arg_value(&arg)?)
             }
         }
 
         if host.is_none() {
-            return Err(err_invalid_input("host must be specified"));
+            return Err(anyhow!("host must be specified"));
         }
 
         Ok(Config {
             host: host.expect(""),
-            port: port,
+            port,
         })
     }
 
@@ -35,21 +36,14 @@ impl Config {
     }
 
     pub fn port(&self) -> Option<u16> {
-        self.port.clone()
+        self.port
     }
 }
 
-fn get_arg_value<T: FromStr>(arg_string: String) -> Result<T, io::Error> {
-    arg_string
+fn get_arg_value<T: FromStr>(arg_string: &str) -> anyhow::Result<T> {
+    let (_, val) = arg_string
         .split_once('=')
-        .map(|(_, val)| String::from(val))
-        .ok_or(err_invalid_input("no arguments provided"))
-        .and_then(|val| {
-            val.parse::<T>()
-                .map_err(|_| err_invalid_input("couldn't parse arg"))
-        })
-}
+        .ok_or(anyhow!("invalid arg format"))?;
 
-fn err_invalid_input(msg: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidInput, msg)
+    val.parse::<T>().map_err(|_| anyhow!("arg parsing error"))
 }

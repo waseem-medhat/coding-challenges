@@ -3,7 +3,7 @@ mod scanner;
 
 use crate::config::Config;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     let config = Config::from_args()?;
     print!("Scanning host: {}", config.host());
 
