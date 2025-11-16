@@ -11,10 +11,12 @@ fn main() -> anyhow::Result<()> {
         None => scanner::vanilla(&config.host()),
         Some(port) => {
             println!(", port: {}", port);
-            if scanner::with_port(&config.host(), port) {
-                println!("port open")
-            } else {
-                println!("port not open")
+            match scanner::with_port(&config.host(), port) {
+                Ok(()) => println!("port open"),
+                Err(err) => {
+                    println!("{:?}", err);
+                    println!("port not open");
+                }
             }
         }
     }
