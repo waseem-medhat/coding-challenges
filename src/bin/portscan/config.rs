@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use std::{env, str::FromStr};
+use std::env;
 
 pub struct Config {
     host: String,
@@ -13,20 +13,19 @@ impl Config {
         let mut port: Option<u16> = None;
 
         for arg in args {
-            if arg.starts_with("-host=") {
-                host = Some(get_arg_value(&arg)?)
-            }
-            if arg.starts_with("-port=") {
-                port = Some(get_arg_value(&arg)?)
-            }
-        }
+            let (key, val) = arg
+                .split_once('=')
+                .ok_or(anyhow!("invalid arg format: {}", arg))?;
 
-        if host.is_none() {
-            return Err(anyhow!("host must be specified"));
+            match key {
+                "-host" => host = Some(val.parse()?),
+                "-port" => port = Some(val.parse()?),
+                _ => (),
+            }
         }
 
         Ok(Config {
-            host: host.expect(""),
+            host: host.ok_or(anyhow!("host must be provided"))?,
             port,
         })
     }
@@ -38,12 +37,4 @@ impl Config {
     pub fn port(&self) -> Option<u16> {
         self.port
     }
-}
-
-fn get_arg_value<T: FromStr>(arg_string: &str) -> anyhow::Result<T> {
-    let (_, val) = arg_string
-        .split_once('=')
-        .ok_or(anyhow!("invalid arg format"))?;
-
-    val.parse::<T>().map_err(|_| anyhow!("arg parsing error"))
 }
