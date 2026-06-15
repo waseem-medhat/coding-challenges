@@ -5,13 +5,13 @@ use crate::config::Config;
 
 fn main() -> anyhow::Result<()> {
     let config = Config::from_args()?;
-    print!("Scanning host: {}", config.host());
+    print!("Scanning host(s): {:?}", config.hosts());
 
-    match config.port() {
-        None => scanner::vanilla(&config.host()),
-        Some(port) => {
+    match config {
+        Config::Vanilla(host) => scanner::vanilla(host),
+        Config::Single(host, port) => {
             println!(", port: {}", port);
-            match scanner::with_port(&config.host(), port) {
+            match scanner::with_port(host, port) {
                 Ok(()) => println!("port open"),
                 Err(err) => {
                     println!("{:?}", err);
