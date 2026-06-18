@@ -1,68 +1,77 @@
+use std::fs;
 use std::io::{self, IsTerminal, Read};
-use std::{env, fs};
 
-struct Config {
-    content: String,
+use clap::Parser;
+
+/// A clone of the `cat` utility
+#[derive(Parser, Debug)]
+#[command(about, long_about = LONG_ABOUT)]
+struct Args {
+    filenames: Vec<String>,
+
+    /// Print line numbers
+    #[arg(short = 'n')]
     print_nums: bool,
+
+    /// Print non-blank line numbers
+    #[arg(short = 'b')]
+    print_nums_nonblank: bool,
 }
 
 fn main() -> Result<(), io::Error> {
-    let config = if io::stdin().is_terminal() {
-        read_from_args()?
+    let args = Args::parse();
+    let content = if io::stdin().is_terminal() {
+        read_file_content(&args.filenames)?
     } else {
-        read_from_stdin()?
+        read_stdin_content()?
     };
 
-    if config.print_nums {
-        config
-            .content
+    if args.print_nums_nonblank {
+        content
             .lines()
-            .enumerate()
-            .for_each(|(i, l)| println!(" {:>3} {l}", i + 1))
-    } else {
-        println!("{}", config.content)
+            .fold(1, |line_count, line| match line.is_empty() {
+                false => {
+                    println!(" {:>3} {line}", line_count);
+                    line_count + 1
+                }
+                true => {
+                    println!("     {line}");
+                    line_count
+                }
+            });
+        return Ok(());
     }
 
+    if args.print_nums {
+        content
+            .lines()
+            .enumerate()
+            .for_each(|(i, l)| println!(" {:>3} {l}", i + 1));
+        return Ok(());
+    }
+
+    println!("{}", content);
     Ok(())
 }
 
-fn read_from_args() -> Result<Config, io::Error> {
-    let mut args = env::args().skip(1);
-    let mut print_nums = false;
+fn read_file_content(filenames: &[String]) -> io::Result<String> {
     let mut content = String::new();
-
-    // 1st arg should either be -n or a file name
-    match args.next() {
-        None => {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "no arguments provided",
-            ));
-        }
-        Some(arg) if arg == "-n" => print_nums = true,
-        Some(file_name) => {
-            content += &fs::read_to_string(file_name)?;
-        }
+    for filename in filenames {
+        content += &fs::read_to_string(filename)?;
     }
-
-    for file_name in args {
-        content += &fs::read_to_string(file_name)?
-    }
-
-    Ok(Config {
-        content,
-        print_nums,
-    })
+    Ok(content)
 }
 
-fn read_from_stdin() -> Result<Config, io::Error> {
+fn read_stdin_content() -> Result<String, io::Error> {
     let mut content = String::new();
     io::stdin().read_to_string(&mut content)?;
-
-    let print_nums = env::args().nth(1).unwrap_or_default() == "-n";
-
-    Ok(Config {
-        content,
-        print_nums,
-    })
+    Ok(content)
 }
+
+const LONG_ABOUT: &str = r#"A clone of the `cat` utility
+
+The goal is to achieve feature parity without necessarily perfect 1:1 mapping of the API.
+
+The project was initially guided by Coding Challenges: https://codingchallenges.fyi/challenges/challenge-cat
+but then referred directly to `cat` itself.
+"#;
