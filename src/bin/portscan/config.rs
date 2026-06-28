@@ -26,13 +26,6 @@ impl Config {
 
         build_config(hosts, port)
     }
-
-    pub fn hosts(&self) -> Vec<String> {
-        match self {
-            Self::SinglePort(hosts, _) => hosts.clone(),
-            Self::Vanilla(hosts) => hosts.clone(),
-        }
-    }
 }
 
 fn build_config(hosts_arg: Option<Vec<String>>, port_arg: Option<u16>) -> anyhow::Result<Config> {

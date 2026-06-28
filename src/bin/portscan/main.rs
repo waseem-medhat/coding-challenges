@@ -1,27 +1,40 @@
 mod config;
 mod scanner;
 
-use crate::config::Config;
-use crate::scanner::{ScanOutcome, with_port};
+use crate::{
+    config::Config,
+    scanner::{ScanOutcome, with_port},
+};
 
 fn main() -> anyhow::Result<()> {
     let config = Config::from_args()?;
+    run(config)
+}
 
-    match config {
-        Config::Vanilla(_) => {
-            println!("Scanning host(s): {:?}", config.hosts());
-            scanner::vanilla(&config.hosts());
+pub fn run(config: Config) -> anyhow::Result<()> {
+    let (hosts, ports, report_closed_ports) = match config {
+        Config::Vanilla(hosts) => {
+            println!("Scanning host(s): {} (vanilla)", hosts.join(","));
+            (hosts, (1..=65535).collect(), false)
         }
-        Config::SinglePort(_, port) => {
-            println!("Scanning host(s): {:?} port: {}", config.hosts(), port);
-            for outcome in with_port(&config.hosts(), port) {
-                match outcome {
-                    ScanOutcome::ResolveFailed(e) => println!("Host resolution failed: {e}"),
-                    ScanOutcome::Open => println!("Port {} is open", port),
-                    ScanOutcome::Closed => println!("Port {} is closed", port),
-                    ScanOutcome::TimedOut => println!("Port {} timed out", port),
-                    ScanOutcome::Unexpected(e) => println!("Unexpected err: {e}"),
+        Config::SinglePort(hosts, port) => {
+            println!("Scanning host(s): {} port: {}", hosts.join(","), port);
+            (hosts, vec![port], true)
+        }
+    };
+
+    for host in &hosts {
+        for port in &ports {
+            match with_port(host, *port) {
+                ScanOutcome::ResolveFailed(e) => {
+                    println!("Host resolution failed: {e}");
+                    break;
                 }
+                ScanOutcome::Open => println!("Port {} is open", port),
+                ScanOutcome::Closed if report_closed_ports => println!("Port {} is closed", port),
+                ScanOutcome::Closed => continue,
+                ScanOutcome::TimedOut => println!("Port {} timed out", port),
+                ScanOutcome::Unexpected(e) => println!("Unexpected err: {e}"),
             }
         }
     }
