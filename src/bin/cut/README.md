@@ -1,5 +1,11 @@
 # `cut`
 
-This tool that should satisfy the requirements of [the challenge on
-codingchallenges.fyi](https://codingchallenges.fyi/challenges/challenge-cut) and
-not a full clone of the Unix command.
+- Challenge: <https://codingchallenges.fyi/challenges/challenge-cut>
+- Status: **in progress**
+
+## To-do
+
+- Investigate piping issues
+- Testing
+- Documentation
+- Feature parity with original tool
