@@ -37,12 +37,9 @@ impl Config {
 
 fn build_config(hosts_arg: Option<Vec<String>>, port_arg: Option<u16>) -> anyhow::Result<Config> {
     match (hosts_arg, port_arg) {
-        (Some(hosts), Some(port)) if hosts.len() == 1 => Ok(Config::SinglePort(hosts, port)),
-        (Some(hosts), None) if hosts.len() == 1 => Ok(Config::Vanilla(hosts)),
+        (Some(hosts), Some(port)) => Ok(Config::SinglePort(hosts, port)),
+        (Some(hosts), None) => Ok(Config::Vanilla(hosts)),
         (None, _) => Err(anyhow!("host(s) must be provided")),
-        _ => Err(anyhow!(
-            "invalid inputs: currently only supporting single-host single-port scans and vanilla scans"
-        )),
     }
 }
 
