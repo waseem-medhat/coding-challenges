@@ -1,14 +1,20 @@
 mod config;
 mod scanner;
 
+use std::time::Instant;
+
 use crate::{
     config::Config,
     scanner::{ScanOutcome, with_port},
 };
 
 fn main() -> anyhow::Result<()> {
+    let started_at = Instant::now();
     let config = Config::from_args()?;
-    run(config)
+    run(config)?;
+    let elapsed = started_at.elapsed();
+    println!("\nRan for {:?}", elapsed);
+    Ok(())
 }
 
 pub fn run(config: Config) -> anyhow::Result<()> {
