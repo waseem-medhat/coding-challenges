@@ -61,12 +61,12 @@ impl Config {
     }
 }
 
-fn arg_to_opt(arg: &String) -> Result<CountOpt, String> {
-    match arg.as_str() {
+fn arg_to_opt(arg: &str) -> Result<CountOpt, String> {
+    match arg {
         "-c" => Ok(CountOpt::Bytes),
         "-m" => Ok(CountOpt::Chars),
         "-w" => Ok(CountOpt::Words),
         "-l" => Ok(CountOpt::Lines),
-        _ => return Err(String::from("invalid arg")),
+        _ => Err(String::from("invalid arg")),
     }
 }

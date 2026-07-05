@@ -1,3 +1,12 @@
+//! # Coding Challenges - Port Scanner
+//!
+//! - Challenge: <https://codingchallenges.fyi/challenges/challenge-port-scanner>
+//! - Status: **in progress**
+//! - TODO
+//!   - Complete challenge
+//!   - Testing
+//!   - Feature parity with original tool
+//!
 mod config;
 mod scanner;
 
@@ -17,7 +26,7 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn run(config: Config) -> anyhow::Result<()> {
+fn run(config: Config) -> anyhow::Result<()> {
     let (hosts, ports, report_closed_ports) = match config {
         Config::Vanilla(hosts) => {
             println!("Scanning host(s): {} (vanilla)", hosts.join(","));

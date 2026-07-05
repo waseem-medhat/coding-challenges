@@ -1,3 +1,11 @@
+//! Coding Challenges - wc
+//!
+//! - Challenge: <https://codingchallenges.fyi/challenges/challenge-wc>
+//! - Status: **meets requirements**
+//! - TODO
+//!   - Testing
+//!   - Feature parity with original tool
+//!
 mod cmd;
 mod config;
 

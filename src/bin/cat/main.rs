@@ -1,3 +1,12 @@
+//! # `cat`
+//!
+//! - Challenge: <https://codingchallenges.fyi/challenges/challenge-cat>
+//! - Status: **meets requirements**
+//!
+//! # TODO
+//! - Testing
+//! - Feature parity with original tool
+//!
 use std::fs;
 use std::io::{self, IsTerminal, Read};
 

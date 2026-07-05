@@ -1,3 +1,11 @@
+//! Coding Challenges - JSON Parser
+//!
+//! - Challenge: <https://codingchallenges.fyi/challenges/challenge-json-parser/>
+//! - Status: **meets requirements**
+//! - TODO
+//!   - Testing (against [full suite](https://www.json.org/JSON_checker/))
+//!   - CLI improvements
+//!
 mod lexer;
 mod parser;
 mod printer;

@@ -1,3 +1,12 @@
+//! Coding Challenges - cut
+//!
+//! - Challenge: <https://codingchallenges.fyi/challenges/challenge-cut>
+//! - Status: **in progress**
+//! - TODO
+//!   - Investigate piping issues
+//!   - Testing
+//!   - Feature parity with original tool
+//!
 mod config;
 
 use crate::config::Config;

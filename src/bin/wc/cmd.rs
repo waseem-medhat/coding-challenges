@@ -1,6 +1,6 @@
 use crate::config::CountOpt;
 
-pub fn count(content: &String, count_opt: &CountOpt) -> String {
+pub fn count(content: &str, count_opt: &CountOpt) -> String {
     match count_opt {
         CountOpt::Bytes => count_bytes(content).to_string(),
         CountOpt::Lines => count_lines(content).to_string(),
@@ -16,18 +16,18 @@ pub fn count(content: &String, count_opt: &CountOpt) -> String {
     }
 }
 
-fn count_bytes(content: &String) -> usize {
+fn count_bytes(content: &str) -> usize {
     content.len()
 }
 
-fn count_lines(content: &String) -> usize {
+fn count_lines(content: &str) -> usize {
     content.chars().filter(|&c| c == '\n').count()
 }
 
-fn count_words(content: &String) -> usize {
+fn count_words(content: &str) -> usize {
     content.split_ascii_whitespace().count()
 }
 
-fn count_chars(content: &String) -> usize {
+fn count_chars(content: &str) -> usize {
     content.chars().count()
 }
