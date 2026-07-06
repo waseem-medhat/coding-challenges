@@ -4,9 +4,10 @@
 //! - Status: **meets requirements**
 //!
 //! - TODO
-//!   - Testing
-//!   - Args for buffering (-u) and stdout lock (-l)
+//!   - Input buffering
 //!   - Non-printing chars (-vte)
+//!   - Error handling and exit codes
+//!   - Testing
 //!
 mod run;
 
@@ -34,6 +35,14 @@ struct Args {
     /// Print non-blank line numbers
     #[arg(short = 'b')]
     print_nums_nonblank: bool,
+
+    /// Acquire a lock on stdout
+    #[arg(short = 'l')]
+    lock_stdout: bool,
+
+    /// Disable output buffering
+    #[arg(short = 'u')]
+    disable_buffering: bool,
 }
 
 fn main() -> anyhow::Result<()> {
