@@ -4,38 +4,36 @@
 //! - Status: **meets requirements**
 //! - TODO
 //!   - Testing
-//!   - Feature parity with original tool
+//!   - Support multiple files
+//!   - Support -L arg
 //!
-mod cmd;
-mod config;
+mod run;
 
-use config::{Config, InputKind};
-use std::fs;
-use std::io::{self, Read};
+use clap::Parser;
+use run::run;
 
-fn main() {
-    let config = match Config::from_args() {
-        Err(msg) => panic!("{msg}; usage: wc [option] <filename>"),
-        Ok(config) => config,
-    };
+#[derive(Parser)]
+struct Args {
+    filename: String,
 
-    let content = match config.input_kind() {
-        InputKind::File(filename) => match fs::read_to_string(filename) {
-            Err(err) => panic!("couldn't read file {filename}: {:?}", err),
-            Ok(str) => str,
-        },
-        InputKind::Stdin => {
-            let mut stdin_string = String::new();
-            io::stdin()
-                .read_to_string(&mut stdin_string)
-                .expect("couldn't read stdin");
-            stdin_string
-        }
-    };
+    /// Count bytes
+    #[arg(short = 'c')]
+    count_bytes: bool,
 
-    let count = cmd::count(&content, config.count_opt());
-    match config.input_kind() {
-        InputKind::File(filename) => println!("{count} {filename}"),
-        InputKind::Stdin => println!("{count}"),
-    }
+    /// Count characters
+    #[arg(short = 'm')]
+    count_chars: bool,
+
+    /// Count words
+    #[arg(short = 'w')]
+    count_words: bool,
+
+    /// Count words
+    #[arg(short = 'l')]
+    count_lines: bool,
+}
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+    run(args)
 }
