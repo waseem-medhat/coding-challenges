@@ -1,15 +1,15 @@
 use std::fs;
-use std::io::{self, BufWriter, IsTerminal, Read, Write, stdout};
+use std::io::{self, BufWriter, Read, Write, stdout};
 
 use anyhow::Context;
 
 use crate::Args;
 
 pub fn run(args: Args) -> anyhow::Result<()> {
-    let content = if io::stdin().is_terminal() {
-        read_file_content(&args.filenames)?
-    } else {
-        read_stdin_content()?
+    let content = match args.filenames.first() {
+        None => read_stdin_content()?,
+        Some(arg) if arg == &String::from('-') => read_stdin_content()?,
+        _ => read_file_content(&args.filenames)?,
     };
 
     let mut stdout = get_stdout_handle(args.lock_stdout, args.disable_buffering);
@@ -17,7 +17,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         return content
             .lines()
             .try_fold(1, |line_count, line| match line.is_empty() {
-                false => writeln!(stdout, " {:>3} {line}", line_count)
+                false => writeln!(stdout, "{:>6}\t{line}", line_count)
                     .map(|_| line_count + 1)
                     .with_context(|| "couldn't print!"),
                 true => writeln!(stdout, "     {line}")
@@ -32,7 +32,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
             .lines()
             .enumerate()
             .try_for_each(|(i, line)| {
-                writeln!(stdout, " {:>3} {line}", i + 1).with_context(|| "couldn't print!")
+                writeln!(stdout, "{:>6}\t{}", i + 1, line).with_context(|| "couldn't print!")
             })
             .map(|_| ());
     }
