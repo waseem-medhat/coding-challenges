@@ -1,16 +1,17 @@
 use std::fs;
-use std::io::{self, IsTerminal, Read};
+use std::io::{self, Read};
 
 use anyhow::Context;
 
 use crate::Args;
 
 pub fn run(args: Args) -> anyhow::Result<()> {
-    let is_terminal = io::stdin().is_terminal();
-    let content = if is_terminal {
-        read_file_content(&args.filename)?
-    } else {
+    let is_reading_stdin = args.filename.is_empty();
+
+    let content = if is_reading_stdin {
         read_stdin_content()?
+    } else {
+        read_file_content(&args.filename)?
     };
 
     let count = count(
@@ -20,10 +21,10 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         args.count_bytes,
         args.count_chars,
     );
-    if is_terminal {
-        println!("{count} {}", args.filename);
+    if is_reading_stdin {
+        println!("{:>8}", count);
     } else {
-        println!("{count}");
+        println!("{:>8} {}", count, args.filename);
     }
 
     Ok(())
