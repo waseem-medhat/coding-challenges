@@ -17,8 +17,9 @@ const LONG_ABOUT: &str = r#"A clone of the `cat` utility
 
 The goal is to get close to feature parity while taking some liberties with the API or behavior, i.e., not meant to be an exact clone.
 
-The project was initially guided by Coding Challenges: https://codingchallenges.fyi/challenges/challenge-cat
-but then used `cat` itself as the reference.
+References:
+- Coding Challenges: https://codingchallenges.fyi/challenges/challenge-cat
+- cat: https://github.com/apple-oss-distributions/text_cmds/blob/main/cat/cat.c
 "#;
 
 /// A clone of the `cat` utility
@@ -50,73 +51,84 @@ fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-use assert_cmd::Command;
+mod tests {
+    use assert_cmd::Command;
+    use std::env;
+    use std::fs::File;
+    use std::io::{self, Write};
 
-#[test]
-fn nonexistent_file() -> anyhow::Result<()> {
-    let mut cmd = Command::cargo_bin("cat")?;
+    #[test]
+    fn nonexistent_file() -> anyhow::Result<()> {
+        let mut cmd = Command::cargo_bin("cat")?;
 
-    cmd.arg("nonexistent_file")
-        .assert()
-        .failure()
-        .code(1)
-        .stderr(predicates::str::contains("No such file"));
+        cmd.arg("nonexistent_file")
+            .assert()
+            .failure()
+            .code(1)
+            .stderr(predicates::str::contains("No such file"));
 
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn basic_printing() -> anyhow::Result<()> {
-    let text_path = "tests/cat/test.txt";
+    #[test]
+    fn basic_printing() -> anyhow::Result<()> {
+        let text_path = env::temp_dir().join("basic.txt");
+        let mut text = io::BufWriter::new(File::create(&text_path)?);
+        for _ in 1..5 {
+            writeln!(text, "hi")?;
+        }
 
-    let mut cmd = Command::cargo_bin("cat")?;
-    let actual_output = cmd.arg(text_path).output()?;
+        let mut original_cmd = Command::new("cat");
+        let expected_output = original_cmd.arg(&text_path).output()?;
 
-    let mut original_cmd = Command::new("cat");
-    let expected_output = original_cmd.arg(text_path).output()?;
+        let mut cmd = Command::cargo_bin("cat")?;
+        cmd.arg(&text_path)
+            .assert()
+            .success()
+            .stdout(predicates::ord::eq(expected_output.stdout));
 
-    assert!(actual_output == expected_output);
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn line_numbers() -> anyhow::Result<()> {
-    let text_path = "tests/cat/test.txt";
+    #[test]
+    fn line_numbers() -> anyhow::Result<()> {
+        let text_path = env::temp_dir().join("nums.txt");
+        let mut text = io::BufWriter::new(File::create(&text_path)?);
+        for _ in 1..5 {
+            writeln!(text, "lorem ipsum")?;
+        }
 
-    let mut cmd = Command::cargo_bin("cat")?;
-    let actual_output = cmd.arg("-n").arg(text_path).output()?;
+        let mut original_cmd = Command::new("cat");
+        let expected_output = original_cmd.arg("-n").arg(&text_path).output()?;
 
-    let mut original_cmd = Command::new("cat");
-    let expected_output = original_cmd.arg("-n").arg(text_path).output()?;
+        let mut cmd = Command::cargo_bin("cat")?;
+        cmd.arg(&text_path)
+            .arg("-n")
+            .assert()
+            .success()
+            .stdout(predicates::ord::eq(expected_output.stdout));
 
-    assert!(actual_output == expected_output);
-    Ok(())
-}
+        Ok(())
+    }
 
-#[test]
-fn nonblank_line_numbers() -> anyhow::Result<()> {
-    let text_path = "tests/cat/test.txt";
+    #[test]
+    fn nonblank_line_numbers() -> anyhow::Result<()> {
+        let text_path = env::temp_dir().join("nonblank.txt");
+        let mut text = io::BufWriter::new(File::create(&text_path)?);
+        for _ in 1..5 {
+            writeln!(text, "lorem ipsum")?;
+        }
 
-    let mut cmd = Command::cargo_bin("cat")?;
-    let actual_output = cmd.arg("-b").arg(text_path).output()?;
+        let mut original_cmd = Command::new("cat");
+        let expected_output = original_cmd.arg("-b").arg(&text_path).output()?;
 
-    let mut original_cmd = Command::new("cat");
-    let expected_output = original_cmd.arg("-b").arg(text_path).output()?;
+        let mut cmd = Command::cargo_bin("cat")?;
+        cmd.arg(&text_path)
+            .arg("-b")
+            .assert()
+            .success()
+            .stdout(predicates::ord::eq(expected_output.stdout));
 
-    assert!(actual_output == expected_output);
-    Ok(())
-}
-
-#[test]
-fn large_line_numbers() -> anyhow::Result<()> {
-    let text_path = "tests/cat/tall.txt";
-
-    let mut cmd = Command::cargo_bin("cat")?;
-    let actual_output = cmd.arg("-n").arg(text_path).output()?;
-
-    let mut original_cmd = Command::new("cat");
-    let expected_output = original_cmd.arg("-n").arg(text_path).output()?;
-
-    assert!(actual_output == expected_output);
-    Ok(())
+        Ok(())
+    }
 }
