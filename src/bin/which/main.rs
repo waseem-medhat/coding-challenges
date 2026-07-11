@@ -2,25 +2,43 @@
 //!
 //! - Challenge: <https://codingchallenges.fyi/challenges/challenge-which>
 //! - Status: **meets requirements**
-//! - TODO
-//!   - Testing
-//!   - Feature parity with original tool
+//! - TODO:
+//!   - Integration testing against `which`
+//!   - Support -a arg: print all instances instead of first one
 //!
 use std::collections::HashMap;
-use std::env;
-use std::fs;
 use std::path::PathBuf;
+use std::{env, fs, process};
 
-fn main() {
-    let cmds: Vec<String> = env::args().skip(1).collect();
+use clap::Parser;
 
+#[derive(Parser)]
+struct Args {
+    /// Command(s) to find in PATH
+    cmds: Vec<String>,
+
+    /// Print nothing. Exit with 0 status if <cmd> is found, and 1 otherwise.
+    #[arg(short = 's')]
+    silent: bool,
+}
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
     let path_var = env::var("PATH").expect("no PATH variable");
-    let cmd_results = walk_paths(path_var, &cmds);
+    let cmd_results = walk_paths(path_var, &args.cmds);
 
-    cmds.iter().for_each(|cmd| match cmd_results.get(cmd) {
-        None => println!("{cmd} not found"),
-        Some(path) => println!("{}", path.to_string_lossy()),
-    });
+    if !args.silent {
+        args.cmds.iter().for_each(|cmd| match cmd_results.get(cmd) {
+            None => println!("{cmd} not found"),
+            Some(path) => println!("{}", path.to_string_lossy()),
+        });
+    }
+
+    if cmd_results.len() != args.cmds.len() {
+        process::exit(1)
+    }
+
+    Ok(())
 }
 
 fn walk_paths(path_var: String, cmds: &[String]) -> HashMap<String, PathBuf> {
