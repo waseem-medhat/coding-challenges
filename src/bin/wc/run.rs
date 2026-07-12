@@ -1,9 +1,7 @@
-use std::fs;
-use std::io::{self, Read};
-
-use anyhow::Context;
+use std::slice;
 
 use crate::Args;
+use coding_challenges::helpers::{read_file_content, read_stdin_content};
 
 pub fn run(args: Args) -> anyhow::Result<()> {
     let is_reading_stdin = args.filename.is_empty();
@@ -11,7 +9,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     let content = if is_reading_stdin {
         read_stdin_content()?
     } else {
-        read_file_content(&args.filename)?
+        read_file_content(slice::from_ref(&args.filename))?
     };
 
     let count = count(
@@ -24,22 +22,10 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     if is_reading_stdin {
         println!("{:>8}", count);
     } else {
-        println!("{:>8} {}", count, args.filename);
+        println!("{:>8} {}", count, &args.filename);
     }
 
     Ok(())
-}
-
-fn read_file_content(filename: &str) -> anyhow::Result<String> {
-    fs::read_to_string(filename).with_context(|| format!("Couldn't read {}", filename))
-}
-
-fn read_stdin_content() -> anyhow::Result<String> {
-    let mut content = String::new();
-    io::stdin()
-        .read_to_string(&mut content)
-        .with_context(|| "Couldn't read from stdin")?;
-    Ok(content)
 }
 
 fn count(content: &str, lines: bool, words: bool, bytes: bool, chars: bool) -> String {

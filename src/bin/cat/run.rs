@@ -1,7 +1,7 @@
-use std::fs;
-use std::io::{self, BufWriter, Read, Write, stdout};
+use std::io::{BufWriter, Write, stdout};
 
 use anyhow::Context;
+use coding_challenges::helpers::{read_file_content, read_stdin_content};
 
 use crate::Args;
 
@@ -9,7 +9,7 @@ pub fn run(args: Args) -> anyhow::Result<()> {
     let content = match args.filenames.first() {
         None => read_stdin_content()?,
         Some(arg) if arg == &String::from('-') => read_stdin_content()?,
-        _ => read_file_content(&args.filenames)?,
+        _ => read_file_content(args.filenames.as_slice())?,
     };
 
     let mut stdout = get_stdout_handle(args.lock_stdout, args.disable_buffering);
@@ -48,21 +48,4 @@ fn get_stdout_handle(lock_stdout: bool, disable_buffering: bool) -> Box<dyn Writ
         (true, true) => Box::new(stdout().lock()),
         (false, true) => Box::new(stdout()),
     }
-}
-
-fn read_file_content(filenames: &[String]) -> anyhow::Result<String> {
-    let mut content = String::new();
-    for filename in filenames {
-        content +=
-            &fs::read_to_string(filename).with_context(|| format!("Couldn't read {}", filename))?;
-    }
-    Ok(content)
-}
-
-fn read_stdin_content() -> anyhow::Result<String> {
-    let mut content = String::new();
-    io::stdin()
-        .read_to_string(&mut content)
-        .with_context(|| "Couldn't read from stdin")?;
-    Ok(content)
 }
