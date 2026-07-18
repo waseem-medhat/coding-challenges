@@ -33,7 +33,7 @@ fn print_line(line: &str, count: i32, print_count: bool, print_repeated: bool) {
         return;
     }
     if print_count {
-        print!("{:>4} ", count);
+        print!("{:>7} ", count);
     }
     println!("{line}");
 }

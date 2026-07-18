@@ -20,9 +20,9 @@ pub fn run(args: Args) -> anyhow::Result<()> {
         args.count_chars,
     );
     if is_reading_stdin {
-        println!("{:>8}", count);
+        println!("{}", count);
     } else {
-        println!("{:>8} {}", count, &args.filename);
+        println!("{} {}", count, &args.filename);
     }
 
     Ok(())
@@ -42,7 +42,7 @@ fn count(content: &str, lines: bool, words: bool, bytes: bool, chars: bool) -> S
         let words = count_words(content).to_string();
         let lines = count_lines(content).to_string();
 
-        format!(" {:>7} {:>7} {:>7}", lines, words, bytes)
+        format!("{:>2} {:>2} {:>2}", lines, words, bytes)
     }
 }
 
