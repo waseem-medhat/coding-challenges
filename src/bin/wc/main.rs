@@ -67,12 +67,13 @@ mod tests {
         file.flush()?;
 
         let expected_output = Command::new("wc").arg(&text_path).output()?.stdout;
+        let expected_predicate = predicates::str::diff(String::from_utf8(expected_output)?);
 
         Command::cargo_bin("wc")?
             .arg(&text_path)
             .assert()
             .success()
-            .stdout(expected_output);
+            .stdout(expected_predicate);
 
         Ok(())
     }
